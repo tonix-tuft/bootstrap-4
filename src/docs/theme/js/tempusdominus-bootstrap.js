@@ -1,5 +1,5 @@
 /*!@preserve
- * Tempus Dominus Bootstrap4 v5.23.0 (https://tempusdominus.github.io/bootstrap-4/)
+ * Tempus Dominus Bootstrap4 v5.31.0 ()
  * Copyright 2016-2020 Jonathan Peterson and contributors
  * Licensed under MIT (https://github.com/tempusdominus/bootstrap-3/blob/master/LICENSE)
  */
@@ -705,7 +705,7 @@ var DateTimePicker = function ($, moment) {
     ;
 
     _proto._getOptions = function _getOptions(options) {
-      options = $.extend(true, {}, Default, options.icons && options.icons.type === 'feather' ? {
+      options = $.extend(true, {}, Default, options && options.icons && options.icons.type === 'feather' ? {
         icons: defaultFeatherIcons
       } : {}, options);
       return options;
@@ -3141,11 +3141,17 @@ var TempusDominusBootstrap4 = function ($) {
       }
 
       this.widget.hide();
-      $(window).off('resize', this._place());
+      $(window).off('resize', this._place);
       this.widget.off('click', '[data-action]');
       this.widget.off('mousedown', false);
       this.widget.remove();
       this.widget = false;
+
+      if (this.input !== undefined && this.input.val() !== undefined && this.input.val().trim().length !== 0) {
+        this._setValue(this._parseInputDate(this.input.val().trim(), {
+          isPickerShow: false
+        }), 0);
+      }
 
       var lastPickedDate = this._getLastPickedDate();
 
@@ -3162,7 +3168,8 @@ var TempusDominusBootstrap4 = function ($) {
     };
 
     _proto2.show = function show() {
-      var currentMoment;
+      var currentMoment,
+          shouldUseCurrentIfUnset = false;
       var useCurrentGranularity = {
         'year': function year(m) {
           return m.month(0).date(1).hours(0).seconds(0).minutes(0);
@@ -3190,16 +3197,14 @@ var TempusDominusBootstrap4 = function ($) {
           this._setValue(this._parseInputDate(this.input.val().trim(), {
             isPickerShow: true
           }), 0);
-        } else if (this.unset && this._options.useCurrent) {
-          currentMoment = this.getMoment();
-
-          if (typeof this._options.useCurrent === 'string') {
-            currentMoment = useCurrentGranularity[this._options.useCurrent](currentMoment);
-          }
-
-          this._setValue(currentMoment, 0);
+        } else {
+          shouldUseCurrentIfUnset = true;
         }
-      } else if (this.unset && this._options.useCurrent) {
+      } else {
+        shouldUseCurrentIfUnset = true;
+      }
+
+      if (shouldUseCurrentIfUnset && this.unset && this._options.useCurrent) {
         currentMoment = this.getMoment();
 
         if (typeof this._options.useCurrent === 'string') {
@@ -3361,6 +3366,7 @@ var TempusDominusBootstrap4 = function ($) {
 
     _proto2.setMultiDate = function setMultiDate(multiDateArray) {
       var dateFormat = this._options.format;
+      this.clear();
 
       for (var index = 0; index < multiDateArray.length; index++) {
         var date = moment(multiDateArray[index], dateFormat);
